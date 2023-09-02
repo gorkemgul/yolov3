@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 # Tuple -> (out_channels, kernel_size, stride), List -> [B, num_repeats]
 config = [
     (32, 3, 1),
@@ -46,8 +45,25 @@ class CNNBlock(nn.Module):
             return self.conv(x)
             
 class ResidualBlock(nn.Module):
-    pass 
-
+    def __init__(self, channels, use_residual = True, num_repeats = 1):
+        super(ResidualBlock, self).__init__()
+        self.use_residual = use_residual
+        self.num_repeats = num_repeats
+        self.layers = nn.ModuleList()
+        for _ in num_repeats:
+            self.layers += [
+                nn.Sequential(
+                    nn.Conv2d(channels, channels // 2, kernel_size = 1),
+                    nn.Conv2d(channels // 2, channels, kernel_size = 3, padding = 1)
+                )
+            ]
+     
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x) + x if self.use_residual else layer(x)
+        
+        return x 
+                
 class ScalePrediction(nn.Module): 
     pass
 
